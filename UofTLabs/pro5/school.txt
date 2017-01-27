@@ -1,0 +1,135 @@
+
+import java.util.ArrayList;
+
+public class School extends Participant {
+	
+	//private String name ; // name
+	 private double alpha ; // GPA weight
+	// private int [] rankings= new int[2000] ; // rankings of students
+	 private int student =0; // index of matched student
+	 private int regret ; // regret
+	 private boolean assigned=false;
+	 private boolean ranked=false;
+	
+	 // constructors
+	 public School (){
+		 
+	 }
+	 public School ( String name , double alpha, int maxm ){  // IMP removed parameter nStudents
+		 super(name,maxm,0);
+		 //this.name=name;
+		 this.alpha=alpha;
+		 for(int i=0;i<6000;i++){
+			 setRanking(i, 0);
+		 }
+		 
+	 }
+	
+	 
+	 /*public double calcRegret(ArrayList<School> s){
+		 int position=0;
+		 for(int i = 0; i<s.size();i++){
+				if(this.getRanking(i)==student)
+					position=i;
+			}
+		 
+		 
+		 return position;
+	 }*/
+	 // getters
+	
+	 public double getAlpha (){
+		 return this.alpha;
+	 }
+	
+	 public int getStudent (){
+		  return student;
+	 }
+	 
+	 public boolean getRanked(){
+		 return ranked;
+	 }
+	
+	 // setters
+	 
+	 public void setAlpha ( double alpha ){
+		 this.alpha= alpha;
+	 }
+	 
+	 public void setStudent ( int i){
+		 this.student=i;
+		 this.assigned=true;
+	 }
+	 public void unsetStudent(){
+		 this.assigned=false;
+	 }
+	 
+	
+	 public void setRanked(boolean r){
+		 ranked=r;
+	 }
+	 public void setNStudents ( int n){ // set rankings array size
+		 
+	 }
+	 // find student ranking based on student ID
+	 public int findRankingByID ( int ind){
+		 return 0;
+	 }
+	
+	 // get new info from the user
+	 public void editInfo ( Student [] S, boolean canEditRankings ){
+		 
+	 }
+	
+	 // calculate rankings based on weight alpha
+	 public void calcRankings (ArrayList<Student> S){
+		 //this gon be hard 
+		 //first we enter all student ranks
+		 for(int i=0;i<S.size();i++){
+			 this.setRanking(i, i);
+		 }
+		 
+		 int temp;
+		 boolean solved=false;
+		 do{
+		 boolean swapped=false;
+		for(int i=0;i<S.size()&&!swapped;i++){
+			if(i==(S.size()-1)) solved=true;
+			else {
+				if((S.get(this.getRanking(i+1)).getGPA()*alpha+S.get(this.getRanking(i+1)).getES()*(1-alpha))>(S.get(this.getRanking(i)).getGPA()*alpha+S.get(this.getRanking(i)).getES()*(1-alpha))) {
+				temp = this.getRanking(i);															//comparing composite scores in descending order
+				this.setRanking(i,this.getRanking(i+1));
+				this.setRanking(i+1, temp);
+				swapped=true;
+				//System.out.println("current ranking for"+i+" is "+this.getRanking(i)); //extra
+				}
+			}
+			
+		}
+		 }while(!solved);
+		 
+		 for(int i=0;i<S.size();i++){
+			 //System.out.println("so current ranking for"+i+" is "+this.getRanking(i)); //extra
+		 }
+		 
+		 
+		 
+	 }
+	
+	 // print school info and assigned student in tabular format
+	 public void printassigned2 ( ArrayList<Student > s ){
+		 String matches="";
+		 for(int i=0;i<this.getMaxMatches();i++){
+			 if(i==0)
+				 matches=s.get(this.getMatch(i)).getName();
+			 
+			 else 
+				 matches+=", "+s.get(this.getMatch(i)).getName();
+		 }
+		 System.out.printf("  %-40s",matches);
+	 }
+	
+	 // print the rankings separated by a comma
+	
+
+}

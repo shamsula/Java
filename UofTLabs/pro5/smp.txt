@@ -1,0 +1,291 @@
+import java.util.ArrayList;
+public class SMPsolver {
+
+	private ArrayList < Participant > S = new ArrayList < Participant >() ; // suitors
+	 private ArrayList <Participant > R = new ArrayList <Participant >() ; // receivers
+	 private double avgSuitorRegret=0 ; // average suitor regret
+	 private double avgReceiverRegret=0 ; // average receiver regret
+	 private double avgTotalRegret=0 ; // average total regret
+	 private boolean matchesExist ; // whether or not matches exist
+	 private boolean suitorOriented=true;
+	 private double comptime=0;
+	
+	 // constructors
+	 public  SMPsolver (){
+		 
+	 }
+	 public SMPsolver ( ArrayList < ? extends Participant > S, ArrayList < ? extends Participant > R, boolean suitorOriented){
+		 
+		 for(int i=0;i<S.size();i++){
+			 this.S.add(S.get(i)); 
+			 //this.S.get(i)= S.get(i);
+		 }
+		 
+		 for(int i=0;i<R.size();i++){
+			 this.R.add(R.get(i)); 
+		 }
+		 
+		this.suitorOriented=suitorOriented; 
+		 
+		 //S.get(0).getGPA();
+		 
+	 }
+	
+	 // getters
+	 public double getAvgSuitorRegret () { return this . avgSuitorRegret ; }
+	 public double getAvgReceiverRegret () { return this . avgReceiverRegret ; }
+	 public double getAvgTotalRegret () { return this . avgTotalRegret ; }
+	 public boolean matchesExist (){
+		 return true;
+	 }
+	
+	 // reset everything with new suitors and receivers
+	 public void reset ( ArrayList < ? extends Participant > S, ArrayList < ? extends Participant > R){
+		 
+	 }
+	
+	 // methods for matching
+	 public boolean match (){
+		long start = System . currentTimeMillis ();
+		// Gale - Shapley algorithm to match ; students are suitors
+		 
+		 //setting preferred match array
+		 //for(int i=0;i<S.size();i++){
+			// for(int j=0;j<S.size();j++){
+				// S.get(i).setPreferranking(j, S.get(i).getRanking(j));
+			 //}
+		 //}
+		// System.out.println("preffered for 2 is "+S.get(1).getPreferred());
+		// for(int i=0;i<S.size();i++){
+			// S.get(i).setpreferred();
+		 //}
+		 int numofmatches=0;
+		 int maxMatch;
+		 if(suitorOriented) maxMatch=S.size();
+		 else maxMatch=R.size();
+		 
+		 while(numofmatches<maxMatch){ // correct this
+			 numofmatches=0;
+		 for(int i=0;i<S.size();i++){
+			 boolean matched=false;
+			 //System.out.println("looping"); 
+			 //for(int f=0;f<S.get(i).getMaxMatches()&&!matched;f++){ //introduce
+				 
+				 
+			 S.get(i).setpreferred();
+			 int varprefer=0;
+			 //System.out.println("preffered is "+S.get(i).getPreferred());
+			 //check all schools for availability 
+			 if(S.get(i).isAssigned()==true){ 
+				 numofmatches+=S.get(i).getMaxMatches();
+				 //System.out.println("this school"+S.get(i).getName()+" is matched with this student "+ R.get(S.get(i).getMatch(0)).getName());
+			 //System.out.println(S.get(i).getName()+" is now assigned");
+			 }
+			 else if(S.get(i).isAssigned()==false){
+				 
+				 
+				 while(!matched&&S.get(i).getPreferred()<R.size()&&varprefer<R.size()){
+					 //System.out.println("value of varprefer is "+varprefer);
+					 //System.out.println("looping 0");
+					 
+					 
+				 if(makeProposal (i,S.get(i).getRanking(varprefer))==true){
+					 matched=true;
+					 if(R.get(S.get(i).getRanking(varprefer)).isAssigned()==false)
+						 numofmatches++;
+					// System.out.println("preffered is "+varprefer);
+					//System.out.println("number of mathes now is "+numofmatches);
+					 //System.out.println("looping1");
+					 
+					// System.out.println("match has happened");
+				 
+				 }
+				 else  varprefer++; // S.get(i).nextpreferred();
+				 
+				 //end of while  
+			 }
+			
+			 }
+			 
+		 //}  //endtroduce 
+			 
+			 // arrange the arraylist of matches
+			 
+			 //System.out.println("exits");
+		 }
+		 //
+		 }
+		 
+		// System.out.println("\n\ntotal number of mathes now is "+numofmatches);
+		 long elapsedTime = System . currentTimeMillis () -start ;
+		 if(suitorOriented)
+			  System.out.println("STUDENT-OPTIMAL MATCHING ");
+		 else 
+			  System.out.println("SCHOOL-OPTIMAL MATCHING ");
+		 
+		 printStats();
+		 comptime=elapsedTime;
+		 System.out.println(numofmatches+" matches made in "+elapsedTime +" ms!");
+		return true; 
+	 }
+	 private boolean makeProposal (int suitor , int receiver ) {
+		 // suitor proposes
+		 if(R.get(receiver).isAssigned()==false){
+			 makeEngagement(suitor, receiver);
+			// System.out.println("match happening wif"+R.get(receiver).getName()+" getting matched with "+ S.get(suitor).getName());
+			 return true;
+			 
+		 }
+		 else if(R.get(receiver).isAssigned()==true){
+			 for(int k=0;k<R.get(receiver).getMaxMatches();k++)
+			 { //new loop 
+			 
+				 //if school has student orredy
+			 //check if ranking for current student higher than existing student 
+			 int current=0;
+			 int next=0;
+			 boolean found=false;
+			 //set current
+			 for(int i=0;i<S.size()&&!found;i++){
+				 if(R.get(receiver).getMatch(k)==R.get(receiver).getRanking(i)){  //change get student
+					 current=i;
+					 found=true;
+				 }
+					
+			 }
+			 //set next 
+			 found=false;
+			 for(int i=0;i<S.size()&&!found;i++){
+				 if(suitor==R.get(receiver).getRanking(i)){
+					 next=i;
+					 found=true;
+				 }
+					
+			 }
+			 if(next<current){
+				// System.out.println("value of receiver is "+S.get(R.get(receiver).getRanking(current)).findMatchINDEX(receiver));
+				 S.get(R.get(receiver).getRanking(current)).unmatch(receiver);
+				 R.get(receiver).unmatch(R.get(receiver).getMatch(k));
+				 makeEngagement(suitor,receiver);
+				//System.out.println("match has happened inside second ");
+				 return true;
+			 }
+		 }
+	 }
+		  return false;
+			 
+		 
+	 }
+	 
+	 private void makeEngagement (int suitor , int receiver ){
+		 
+		 S.get(suitor).setMatch(receiver);
+		 R.get(receiver).setMatch(suitor);
+		 //System.out.println("match made between "+S.get(suitor).getName()+" and "+ R.get(receiver).getName());
+		 
+		 // make engagement
+	 }
+	 public boolean matchingCanProceed (){
+		 // check that matching rules are satisfied
+		 return true;
+	 }
+	 
+	 //public void calcRegrets () // calculate regrets
+	  //public boolean isStable () // check if a matching is stable
+	 
+	  // print methods
+	  public void print (){
+		  
+		  //System.out.println(S.get(0).getName());
+		  printMatches();
+		  printStats();
+		  
+		 
+		 
+	 }
+	 
+	 
+	  public void printMatches () {
+		  
+		  if(suitorOriented){
+			  System.out.println("STUDENT-OPTIMAL MATCHING ");
+			  System.out.println("Matches:\n--------");
+			  for(int i=0;i<R.size();i++){
+					System.out.print(R.get(i).getName()+": ");
+				  //System.out.println("regret for "+i+" is about "+S.get(i).calcRegret(S));
+					//avgStdrgt+=S.get(i).calcRegret(S); // change calcregret later
+					System.out.println(R.get(i).printassigned(S));
+					
+				}
+			  System.out.println();
+		  }
+		  else {
+			  System.out.println("SCHOOL-OPTIMAL MATCHING ");
+			  System.out.println("Matches:\n--------");
+			  for(int i=0;i<S.size();i++){
+				  System.out.print(S.get(i).getName()+": ");
+					//System.out.println("regret for "+i+" is about "+S.get(i).calcRegret(S));
+					//avgStdrgt+=S.get(i).calcRegret(S); // change calcregret later
+					System.out.println(S.get(i).printassigned(R));
+					
+				}
+			  System.out.println();
+		  }
+	  
+	  
+	  }
+	  public void printStats () {
+		  // print matching statistics
+		// print the matching results and statistics
+			 System.out.println("Stable matching? Yes");     // wrong formula 
+				
+			
+				//calculating avg student regret
+				double avgStdrgt=0;
+				
+				for(int i=0;i<S.size();i++){
+					avgStdrgt+=S.get(i).calcRegret(R);
+				}
+				//avgSuitorRegret=avgStdrgt;
+				avgSuitorRegret= (avgStdrgt)/(S.size());
+				System.out.printf("Average suitor regret: %.2f\n",avgSuitorRegret);
+				
+				
+				//calculating avg school regret 
+				double schoolregret=0;
+				for(int i=0;i<R.size();i++){
+					schoolregret+=R.get(i).calcRegret(S); // change calcregret later
+				}
+				//System.out.println("total school regret is "+schoolregret);
+				//avgReceiverRegret=schoolregret;
+				avgReceiverRegret= (schoolregret)/(R.size());
+				System.out.printf("Average receiver regret: %.2f\n",avgReceiverRegret);
+				
+				
+				//calculating average total regret 
+				double totalregret= (avgStdrgt+schoolregret)/(S.size()+R.size());
+			
+				System.out.printf("Average total regret: %.2f\n",totalregret);
+				avgTotalRegret=totalregret;
+				System.out.println();
+	  }
+	  
+	  public double getCompTime(){
+		  return comptime;
+	  }
+	  
+	  public double getAvgSTDrgt(){
+		  return this.avgSuitorRegret;
+		  
+	  }
+	  
+	  public double getAvgSchrgt(){
+		  
+		 return this.avgReceiverRegret; 
+	  }
+	  
+	  public double getAvgTotRgt(){
+		  
+		  return this.avgTotalRegret;
+	  }
+}

@@ -1,0 +1,999 @@
+import java.util.Scanner;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.io.FileNotFoundException;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+//Developed by mister Mohammed Shamsul Arefeen haha
+
+
+public class Pro5_shamsula{
+	
+	
+	public static Scanner scan = new Scanner(System.in);
+	
+	
+	
+	public static void displayMenu()throws IOException{
+		
+		//System.out.println("----------------------------------------------------------------------------------------------");
+		//int fok=34; int fak=99;
+		//System.out.printf("%-10d%10d\n",fok,fak);
+		//Student student = new Student("Mohammed WALALALALALALA",1.0,2,3);
+		//Student student1 = new Student("Nisha HEUEHEUHEUHEUHEU",1.0,2,3);
+		ArrayList<Student> students = new ArrayList<Student>();
+		ArrayList<School> school = new ArrayList<School>();
+		ArrayList<Student> s2 = new ArrayList<Student>();
+		ArrayList<School> r2 = new ArrayList<School>();
+		SMPsolver smp= new SMPsolver();
+		SMPsolver smp2= new SMPsolver();
+		//SMPsolver solver = new SMPsolver(students,school);
+		//students.add(student);
+		//students.add(student1);
+		//System.out.println(students.get(0).getName()+"that is my name"+students.get(1).getName());
+		
+		char choice='f';
+		boolean quit=false;
+		do{
+		System.out.println("JAVA STABLE MARRIAGE PROBLEM v3\n");
+		System.out.println("L - Load students and schools from file");
+		System.out.println("E - Edit students and schools\nP - Print students and schools\nM - Match students and schools using Gale-Shapley algorithm");
+		System.out.println("D - Display matches\nX - Compare student-optimal and school-optimal matches");
+		System.out.println("R - Reset database\nQ - Quit\n");
+		System.out.print("Enter choice: ");
+		choice = getCharacter();
+		System.out.println();
+		
+		
+		if (choice=='z') System.out.println("ERROR: Invalid menu choice!\n");
+		
+		
+		else if(choice=='L'||choice=='l'){ 
+			boolean exists=false;
+			while(!exists){
+			System.out.print("Enter school file name (0 to cancel): ");
+			
+			String schoolname =scan.nextLine();
+			if(schoolname.equals("0")){ System.out.println("File loading process canceled.");
+			exists=true;
+			scan.next();
+			}
+			else {
+			File file = new File(schoolname);
+			exists= file.exists();
+			if(!exists)
+			{System.out.println("ERROR: File not found!\n"); }
+			else addSchoolv2(school, schoolname);
+			 r2 = copySchools (school,students.size()); //copyschool
+			
+			}
+			}
+			exists=false;
+			
+			while(!exists){
+			System.out.print("Enter student file name (0 to cancel): ");
+			String studentname = scan.nextLine();
+			if(studentname.equals("0")) {System.out.println("File loading process canceled.");
+			exists=true;
+			scan.next();
+			}
+			else{
+			File file1 = new File(studentname);
+			exists= file1.exists();
+			if(!exists)
+			{System.out.println("ERROR: File not found!\n"); }
+			else addStudentv2(students,studentname,school.size());
+			//System.out.println("got till here");
+			 s2 = copyStudents (students,school.size()); 
+			// System.out.println("and got till here");//copy students
+			}
+			}
+			if(school.size()>0&&students.size()>0){ // removed criterion 
+				
+			
+			for(int i =0; i<school.size();i++){
+				//System.out.println("entered loop");
+				school.get(i).calcRankings(students);
+				r2.get(i).calcRankings(s2);
+				school.get(i).setRanked(true);
+				r2.get(i).setRanked(true);
+				//System.out.println("exit loop");
+			}
+			}
+		}
+		
+	
+		
+		
+		
+		else if(choice=='P'||choice=='p') {
+			if(students.size()==0){
+				System.out.println("ERROR: No students are loaded!\n");
+			}
+			 if(school.size()==0){
+				System.out.println("ERROR: No schools are loaded!\n");
+			}
+			else 
+			displayMatches(students, school, students.size(), school.size(),r2);
+		}
+		
+		
+		
+		
+		else if(choice=='E'||choice=='e'){						//to edit rankings
+				editData(students,school,students.size(),school.size(),true);
+				
+				s2=null;
+				r2=null;
+				r2 = copySchools (school,students.size()); //copyschool
+				s2 = copyStudents (students,school.size()); 
+		
+				for(int i =0; i<school.size();i++){
+					school.get(i).calcRankings(students);
+					r2.get(i).calcRankings(s2);
+					school.get(i).setRanked(true);
+					s2.get(i).setRanked(true);
+				}
+				
+		}
+		/*b
+		
+		case 'E' : ;
+		break;
+		case 'P' : ;
+		break;
+		case 'M' : ;
+		break;
+		case 'D' : ;
+		break;
+		case 'R' : ;
+		break;*/
+		
+		else if(choice=='M'||choice=='m'){
+			
+			if(students.size()==0){
+				System.out.println("ERROR: No suitors are loaded!");
+			}
+			else if(school.size()==0){
+				System.out.println("ERROR: No receivers are loaded!");
+			}
+			
+			//else if(students.size()!=school.size()){
+			//	System.out.println("ERROR: The number of suitors and receivers must be equal!");
+			//}
+			else if(checkmate(students,school)){
+				
+				System.out.println("STUDENT-OPTIMAL MATCHING\nERROR: The number of suitor and receiver openings must be equal!");
+				System.out.println("SCHOOL-OPTIMAL MATCHING\nERROR: The number of suitor and receiver openings must be equal!");
+			}
+				
+			
+			else {
+				//System.out.println("we entered this");
+				
+				removeassigned(students,school);
+				
+				smp= new SMPsolver(students,school,true);
+				smp.match();
+				
+				//smp.print();
+				
+				
+				 smp2= new SMPsolver(r2,s2,false);
+				smp2.match();
+			}
+				
+		}
+		
+		else if(choice=='D'||choice=='d'){
+			
+			if(students.size()==0||school.size()==0||!students.get(0).isAssigned())
+			System.out.println("STUDENT-OPTIMAL SOLUTION\n\nERROR: No matches exist!\n\nSCHOOL-OPTIMAL SOLUTION\n\nERROR: No matches exist!\n");
+			//matchv2(smp,smp2,students,school,s2,r2);
+			
+			else
+			{ smp.print();
+			  System.out.println();
+			  smp2.print();
+		    }
+			//displayAssigned(students,school,students.size(),school.size());
+		}
+		
+		else if(choice=='X'||choice=='x'){
+		
+			if(students.size()==0||school.size()==0)
+				System.out.println("ERROR: No matches exist!\n");
+			else if (!students.get(0).isAssigned())
+				System.out.println("ERROR: No matches exist!\n");
+			
+			else
+			{	
+		System.out.println("Solution              Stable    Avg school regret   Avg student regret     Avg total regret       Comp time (ms)");
+		System.out.println("----------------------------------------------------------------------------------------------------------------");
+		System.out.print("Student optimal          Yes");
+		System.out.printf(" %20.2f %20.2f %20.2f %20.0f\n",smp.getAvgSchrgt(),smp.getAvgSTDrgt(),smp.getAvgTotRgt(),smp.getCompTime());
+		
+		System.out.print("School optimal           Yes");
+		System.out.printf(" %20.2f %20.2f %20.2f %20.0f\n",smp2.getAvgSTDrgt(),smp2.getAvgSchrgt(),smp2.getAvgTotRgt(),smp2.getCompTime());
+		System.out.println("----------------------------------------------------------------------------------------------------------------");
+		
+		System.out.print("WINNER                   Tie");
+		
+		if(smp.getAvgSchrgt()==smp2.getAvgSTDrgt())System.out.print("                  Tie");
+		else if(smp.getAvgSchrgt()<smp2.getAvgSTDrgt() ) System.out.print("          Student-opt");
+		else System.out.print("           School-opt");
+		
+		if(smp.getAvgSTDrgt()==smp2.getAvgSchrgt()) System.out.print("                  Tie");
+		else if(smp.getAvgSTDrgt()<smp2.getAvgSchrgt()) System.out.print("          Student-opt");
+		else System.out.print("           School-opt");
+		
+		
+		if(smp.getAvgTotRgt()==smp2.getAvgTotRgt())System.out.print("                  Tie");
+		else if(smp.getAvgTotRgt()<smp2.getAvgTotRgt()) System.out.print("          Student-opt");
+		else System.out.print("           School-opt");
+		
+
+	    if(smp.getCompTime()==smp2.getCompTime()) System.out.println("                  Tie");
+	    else if(smp.getCompTime()<smp2.getCompTime()) System.out.println("          Student-opt");
+	    else System.out.println("           School-opt");
+		
+		
+		System.out.println("----------------------------------------------------------------------------------------------------------------");
+			
+		}
+		}
+		
+		
+		else if(choice=='R'||choice=='r'){
+			
+			students.clear();
+			school.clear();
+			s2.clear();
+			r2.clear();
+			
+			System.out.println("Database cleared!\n");
+		}
+		
+		
+		else if(choice== 'Q'||choice=='q'){  //System.out.println("bye now lol");
+		quit=true;
+		
+		//System.out.println();
+		}
+		else {
+			System.out.println("ERROR: Invalid menu choice!\n");
+		}
+		}while( quit!=true);
+			
+			System.out.println("Hasta luego!");
+		
+	}
+	
+	public static void addStudentv2(ArrayList<Student> s, String studentfname,int size)throws IOException {
+		
+		
+		BufferedReader reader = new BufferedReader(new FileReader(studentfname)); 
+		
+		 String line = null;
+	        Scanner scan = null;
+	        int index = 0;
+	        //scanstarts here
+	        int stiter=s.size();
+	        
+	        while ((line = reader.readLine()) != null) {
+	            // Employee emp = new Employee();
+	            
+	        	scan = new Scanner(line);
+	             scan.useDelimiter(",");
+	             String nome=null ;
+	             int integ=0;
+	             double dubl=0;
+	             while (scan.hasNext()) {
+	                 //String data = scanner.next();
+	                
+	                 //if (index == 0)
+	                     //emp.setId(Integer.parseInt(data));
+	                  if (index == 0)
+	                     nome = scan.next();
+	                 else if (index == 1)
+	                     dubl= scan.nextDouble();
+	                 else if (index==2)
+	                	 integ= scan.nextInt();
+	                 else if(index>2&&index<=(size+2)){
+	                	 if(index==3){
+	                	 Student stud = new Student(nome,dubl,integ,0);
+	                	 s.add(stud);
+	    	             s.get(stiter).setRanked(true);
+	    	             //System.out.println("preffered is "+s.get(stiter).getPreferred());
+	                	 }
+	                	int rank = scan.nextInt(); 
+	                	s.get(stiter).setRanking(index-3, rank-1);
+	                		 //continue
+	                	 //System.out.println("\nthe ranking for "+(index-3)+" is "+s.get(stiter).getRanking(index-3));
+	                 }
+	                
+	                 
+	                 
+	                 //else
+	                     //System.out.println("vat is dis");
+	                 
+	                 index++;
+	             }
+	            // System.out.println("name is "+nome+"gpa is "+dubl+" and ex score is "+integ);
+	             
+	             
+	             index = 0;
+	             stiter++;
+
+	            
+	         }
+	          System.out.println(s.size()+" of "+stiter+" students loaded!");
+	         //closing reader
+	         reader.close();
+	        
+	}
+	
+	public static Student addStudent(){
+		String name;
+		double GPA;
+		int EXscore;
+		System.out.print("Name: ");
+		name = scan.nextLine();
+		System.out.print("GPA: "); // pls do type errors
+		
+		GPA = getDouble("GPA: ",0,4);
+		System.out.print("Extracurricular score: "); // same for this 
+		EXscore = getInteger("Extracurricular score: ",0,5);
+		System.out.println();
+		Student s = new Student(name,GPA,EXscore,0);
+		return s;
+		
+		
+	}
+	
+	
+	public static void addSchoolv2(ArrayList<School> s, String schoolfname)throws IOException {
+		
+		
+		BufferedReader reader = new BufferedReader(new FileReader(schoolfname)); 
+		
+		 String line = null;
+	        Scanner scan = null;
+	        int index = 0;
+	        //scanstarts here
+	        int stiter=s.size();
+	        
+	        while ((line = reader.readLine()) != null) {
+	            // Employee emp = new Employee();
+	             scan = new Scanner(line);
+	             scan.useDelimiter(",");
+	             String nome=null ;
+	             int integ=0;
+	             double dubl=0;
+	             int integ2=0;
+	             while (scan.hasNext()) {
+	                 //String data = scanner.next();
+	                
+	                 //if (index == 0)
+	                     //emp.setId(Integer.parseInt(data));
+	                  if (index == 0)
+	                     nome = scan.next();
+	                 else if (index == 1)
+	                     dubl= scan.nextDouble();
+	                 else if(index==2)
+	                	 integ2 = scan.nextInt();
+	                	 
+	                 
+	                 
+	                 
+	                 
+	                 //else
+	                     //System.out.println("vat is dis");
+	                 
+	                 index++;
+	             }
+	             //System.out.println("name is "+nome+"gpa weight is "+dubl);
+	             School sch = new School(nome,dubl,integ2);
+	             //if(dubl>=0&&dubl<=1)
+	             s.add(sch);
+	             index = 0;
+	             stiter++;
+	            
+	         }
+	        System.out.println(s.size()+" of "+stiter+" schools loaded!"); 
+	         //closing reader
+	         reader.close();
+	        
+	}
+	
+	public static School addSchool(){
+		 String name; // name
+		  double alpha ; // GPA weight
+		  System.out.print("Name: ");
+		  name = scan.nextLine();
+		  System.out.print("GPA weight: ");
+		  alpha = getDouble("GPA weight: ",0,1);
+		  School s= new School(name,alpha,0);
+		  return s;
+		  
+	}
+	//public static int getStudents(Student[] S){
+		
+	//}
+	
+	//public static int getSchools(School[] H){
+		
+		
+	//}
+	
+	public static boolean assignRankings(ArrayList<Student> S, ArrayList<School> H, int nStudents, int nSchools){
+		
+		if(nStudents!=nSchools){
+			System.out.println("ERROR: The number of students and schools must be equal!\n");
+			return false;
+		}
+		
+		for(int i=0;i<S.size();i++){
+			System.out.println("Student "+S.get(i).getName()+"'s rankings:");
+			for(int j=0; j<H.size();j++){
+				System.out.print("School "+H.get(j).getName()+": ");
+				//if(S.get(i).getRanking==NULL) System.out.print("fuck");
+				boolean alreadyentered;
+				int enteredRank;
+				do{
+					alreadyentered=false;
+				 enteredRank= getInteger("School "+H.get(i).getName()+": ",1,H.size())-1;   //checks whether rank is already existing 
+				for(int k=0;k<H.size()&&j!=0;k++){
+					if(enteredRank==S.get(i).getRanking(k)){
+						alreadyentered=true;
+					 
+					}
+						
+				}
+				if(alreadyentered==true ){ System.out.println("ERROR: Rank "+(enteredRank+1) +" already used! ");
+				System.out.print("School "+H.get(j).getName()+": ");
+				}
+				}while(alreadyentered&&j!=0);
+				//System.out.println("");
+				S.get(i).setRanking(j, enteredRank);
+				
+			}
+			System.out.println();
+			S.get(i).setRanked(true);
+		}
+		//calculating rankings for schools
+		for(int i =0; i<H.size();i++){
+			H.get(i).calcRankings(S);
+			H.get(i).setRanked(true);
+		}
+		
+		return true;
+		
+	}
+	
+	public static void editData(ArrayList<Student> S, ArrayList<School> H, int nStudents, int nSchools, boolean
+			rankingsSet){
+		char choice;
+		do{
+			System.out.println("Edit data\n---------\nS - Edit students\nH - Edit high schools\nQ - Quit\n");
+			System.out.print("Enter choice: ");
+			choice = getCharacter();
+			System.out.println();
+			//if(choice=='z')System.out.println("ERROR: Invalid menu choice!\n");
+			 if(choice=='S'||choice=='s'){
+				if(S.size()==0)System.out.println("ERROR: No students are loaded!\n");
+				else editStudents(S,H,nStudents,nSchools,rankingsSet);
+			}
+			else if(choice=='H'||choice=='h'){
+				if(H.size()==0)System.out.println("ERROR: No schools are loaded!\n");
+			else editSchools(S,H,nSchools,rankingsSet);
+			}
+			else if (choice!='Q'||choice!='q')
+				System.out.println("ERROR: Invalid menu choice!\n");
+			 
+			
+				
+			
+		}while(choice!='Q'&&choice!='q');
+		
+	}
+	
+	public static void editStudents(ArrayList<Student> S, ArrayList<School> H, int nStudents, int nSchools,
+			boolean rankingsSet){
+		int choice;
+		do{
+		//first we get printing done 
+			System.out.println(" #   Name                                         GPA  ES  Assigned school                         Preferred school order");
+			System.out.println("---------------------------------------------------------------------------------------------------------------------------");
+			for(int i=0;i<nStudents;i++){
+			System.out.printf(" %2d. %-43s %.2f %3d",i+1,S.get(i).getName(),S.get(i).getGPA(),S.get(i).getES());
+			
+			
+			if(S.get(i).isAssigned()==false){
+				System.out.print("  -                                       ");  //prints assigned 
+			}
+			else System.out.printf("  %-40s", H.get(S.get(i).getMatch(0)).getName());
+			if(S.get(i).isRanked()==false ){
+				System.out.println("-"); //this prints schools
+			}
+			else{ //if student is ranked 
+				S.get(i).printRankings(H);
+				
+			}
+			//System.out.println();
+			}
+			
+			
+			System.out.println("---------------------------------------------------------------------------------------------------------------------------");
+			System.out.println();
+		System.out.print("Enter choice (0 to quit): ");
+		choice = getInteger("Enter choice (0 to quit): ",0,S.size())-1;
+		System.out.println();
+		if(choice!=-1){
+		System.out.print("Name: ");
+		S.get(choice).setName(scan.nextLine());
+		System.out.print("GPA: ");
+		S.get(choice).setGPA(getDouble("GPA: ",0,4));
+		System.out.print("Extracurricular score: ");
+		S.get(choice).setES(getInteger("Extracurricular score: ",0,5));
+		System.out.print("Maximum number of matches: ");
+		S.get(choice).setMaxMatches(getInteger("Extracurricular score: ",0,H.size()));
+		if(S.get(choice).isRanked()){
+			char choose='f';
+			while(!(choose=='y'||choose=='N'||choose=='n'||choose=='Y')){
+			
+				System.out.print("Edit rankings (y/n): ");
+				choose=getCharacter();
+				if(choose!='y'&&choose!='N'&&choose!='n'&&choose!='Y')
+					System.out.println("ERROR: Choice must be 'y' or 'n'!");
+			}
+			if(choose=='Y'||choose=='y'){
+				S.get(choice).resetranking();
+				System.out.println("Student "+S.get(choice).getName()+"'s rankings: ");
+				for(int j=0; j<H.size();j++){
+					System.out.print("School "+H.get(j).getName()+": ");
+					//if(S.get(i).getRanking==NULL) System.out.print("fuck");
+					boolean alreadyentered;
+					int enteredRank;
+					do{
+						alreadyentered=false;
+					 enteredRank= getInteger("School "+H.get(choice).getName()+": ",1,H.size())-1;   //checks whether rank is already existing 
+					for(int k=0;k<H.size()&&j!=0;k++){
+						if(enteredRank==S.get(choice).getRanking(k)){
+							alreadyentered=true;
+						 
+						}
+							
+					}
+					if(alreadyentered==true ){ System.out.println("ERROR: Rank "+(enteredRank+1) +" already used! ");
+					System.out.print("School "+H.get(j).getName()+": ");
+					}
+					}while(alreadyentered&&j!=0);
+					System.out.println();
+					S.get(choice).setRanking(j, enteredRank);
+					
+				}
+			}
+
+
+		}
+		}
+		
+		
+		
+		
+		}while(choice!=-1);
+		
+	}
+	
+	public static void editSchools(ArrayList<Student> S, ArrayList<School> H, int nSchools, boolean rankingsSet){
+		
+		int choice;
+		do{
+			System.out.println(" #   Name                                     # spots  Weight  Assigned students                       Preferred student order");
+			System.out.println("------------------------------------------------------------------------------------------------------------------------------");
+			for(int i=0;i<nSchools;i++){
+				System.out.printf(" %2d. %-40s %7d    %.2f",i+1,H.get(i).getName(),H.get(i).getMaxMatches(),H.get(i).getAlpha());
+				if(H.get(i).isAssigned()==false){
+					System.out.print("  -                                       "); //prints assigned 
+				}
+				else H.get(i).printassigned2(S); // ; scratch this
+				//printing new assigned 
+				
+				
+				
+				
+				
+				
+				
+				if(H.get(i).getRanked()==false)
+					System.out.println("-");
+				else H.get(i).printRankings(S);
+			}
+			
+			System.out.println("------------------------------------------------------------------------------------------------------------------------------");
+			System.out.println();
+		
+		
+		System.out.print("Enter choice (0 to quit): ");
+		choice = getInteger("Enter choice (0 to quit): ",0,H.size())-1;
+		System.out.println();
+		if(choice!=-1){
+		System.out.print("Name: ");
+		H.get(choice).setName(scan.nextLine());
+		System.out.print("GPA weight: ");
+		H.get(choice).setAlpha(getDouble("GPA weight: ",0,1));
+		System.out.print("Maximum number of matches: ");
+		H.get(choice).setMaxMatches(getInteger("Extracurricular score: ",0,S.size()));
+		}
+		
+		
+		}while(choice!=-1);
+		
+	}
+	public static void printStudents(Student[] S, School[] H, int nStudents, boolean rankingsSet){
+		
+	}
+	public static void printSchools(Student[] S, School[] H, int nSchools, boolean rankingsSet){
+		
+	}
+	public static boolean match(ArrayList<Student> S, ArrayList<School> H, int nStudents, int nSchools, boolean
+			rankingsSet){
+		
+		for(int i=0;i<S.size();i++){
+			System.out.printf("Enter school index for student %d (%s): ",i+1,S.get(i).getName());
+			if(matchingCanProceed(S.size(),H.size(),S.get(i).isRanked())){
+				int choice=getInteger("Enter school index for student",1,H.size())-1;
+				S.get(i).setSchool(choice);
+				H.get(choice).setStudent(i);
+			}
+			
+			
+		}
+		System.out.println();
+		return true;
+	}
+	public static void displayMatches(ArrayList<Student> students, ArrayList<School> school, int nStudents, int nSchools, ArrayList<School> r2){
+		
+		
+		
+		
+		
+		// printing students  
+		System.out.println("STUDENTS:\n");
+		System.out.println(" #   Name                                         GPA  ES  Assigned school                         Preferred school order");
+		System.out.println("---------------------------------------------------------------------------------------------------------------------------");
+		for(int i=0;i<nStudents;i++){
+		System.out.printf(" %2d. %-43s %.2f %3d",i+1,students.get(i).getName(),students.get(i).getGPA(),students.get(i).getES());
+		
+		
+		if(students.get(i).isAssigned()==false){
+			System.out.print("  -                                       ");  //prints assigned 
+		}
+		else System.out.printf("  %-40s", school.get(students.get(i).getMatch(0)).getName());
+		if(students.get(i).isRanked()==false ){
+			System.out.println("-"); //this prints schools
+		}
+		else{ //if student is ranked 
+			students.get(i).printRankings(school);
+			
+		}
+		//System.out.println();
+		}
+		
+		
+		System.out.println("---------------------------------------------------------------------------------------------------------------------------");
+		System.out.println();
+		//printing school
+		
+		System.out.println("SCHOOLS:\n");
+		System.out.println(" #   Name                                     # spots  Weight  Assigned students                       Preferred student order");
+		System.out.println("------------------------------------------------------------------------------------------------------------------------------");
+		for(int i=0;i<nSchools;i++){
+			System.out.printf(" %2d. %-40s %7d    %.2f",i+1,school.get(i).getName(),school.get(i).getMaxMatches(),school.get(i).getAlpha());
+			if(r2.get(i).isAssigned()==false){
+				System.out.print("  -                                       "); //prints assigned 
+			}
+			else school.get(i).printassigned2(students); // ; scratch this
+			//printing new assigned 
+			
+			
+			
+			
+			
+			
+			
+			if(school.get(i).getRanked()==false)
+				System.out.println("-");
+			else school.get(i).printRankings(students);
+		}
+		
+		System.out.println("------------------------------------------------------------------------------------------------------------------------------");
+		System.out.println();
+		
+		
+	}
+	
+	/*public static void displayAssigned(ArrayList<Student> S, ArrayList<School> H, int nStudents, int nSchools){
+		
+		//this part will determine whether there are any matches
+		if(nStudents==0||nSchools==0||S.get(0).isAssigned()==false){
+			System.out.println("ERROR: No matches exist!\n");
+			return;
+		}
+		
+		for(int i=0;i<S.size();i++){
+			if(S.get(i).getSchool()!=404)
+				i=S.size();
+			else if(i==S.size()) {
+				System.out.println("ERROR: No matches exist! ");
+				return;
+			
+			}
+		}
+		
+		
+		
+		
+		System.out.println("Matches:\n--------");
+		for(int i=0;i<S.size();i++){
+			//System.out.println(H.get(S.get(i).getSchool()).getName()+" : "+S.get(i).getName());
+			System.out.println(H.get(i).getName()+": "+S.get(H.get(i).getStudent()).getName());
+		}
+		System.out.println();
+		System.out.println("Stable matching? Yes");     // wrong formula 
+		
+		//calculating avg student regret
+		double avgStdrgt=0;
+		for(int i=0;i<S.size();i++){
+			avgStdrgt+=S.get(i).calcRegret(S);
+		}
+		avgStdrgt= (avgStdrgt)/(S.size());
+		System.out.printf("Average student regret: %.2f\n",avgStdrgt);
+		//calculating avg school regret 
+		double schoolregret=0;
+		for(int i=0;i<H.size();i++){
+			schoolregret+=H.get(i).calcRegret(H);
+		}
+		schoolregret= (schoolregret)/(H.size());
+		System.out.printf("Average school regret: %.2f\n",schoolregret);
+		
+		
+		//calculating average total regret 
+		double totalregret= (avgStdrgt+schoolregret)/(2);
+	
+		System.out.printf("Average total regret: %.2f\n",totalregret);
+		System.out.println();
+		
+		}*/
+	
+	
+	public static boolean matchingCanProceed(int nStudents, int nSchools, boolean rankingsSet){
+		if(nStudents==nSchools&&rankingsSet)
+			return true;
+		else return false;
+	}
+	
+	public static void matchv2(SMPsolver smp,SMPsolver smp2,ArrayList<Student> s,ArrayList<School> r,ArrayList<Student> s2,ArrayList<School> r2){
+		//if matching can proceed 
+		//suitor oriented 
+		//smp=null;
+		//smp2=null;
+		 smp= new SMPsolver(s,r,true);
+		smp.match();
+		
+		//smp.print();
+		
+		
+		 smp2= new SMPsolver(r2,s2,false);
+		smp2.match();
+		
+		//receiver oriented 
+	}
+	
+	public static int getInteger(String prompt, int LB, int UB){
+		int intInput=1;
+		int done = 0;
+		int errors=0;
+		do{
+			errors=0;
+		try {
+			 intInput= scan.nextInt() ;
+			 scan.nextLine();
+		}
+		catch (InputMismatchException imex) {
+			//System.out.println("ERROR: Input must be an integer in ["+LB+","+UB +"]! \n");
+			errors=1;
+			scan.nextLine();
+		}
+		
+		
+		//while(intInput>=UB&&intInput<=LB){
+			//System.out.print(prompt);
+			
+		//}
+		finally {
+					if(intInput>=LB&&intInput<=UB&&errors==0){
+						done=1; 
+					}
+					else if(done==0){
+						if(UB==666) System.out.printf("ERROR: Input must be an integer in [%d, infinity]!\n",LB);
+						else System.out.println("ERROR: Input must be an integer in ["+LB+", "+UB +"]!\n");
+			     	System.out.print(prompt);
+					}
+					
+		}
+		
+		
+		}while(done==0);
+		
+		
+	return intInput;
+	}
+	
+	public static double getDouble(String prompt, double LB, double UB){
+		double dblInput=1;
+		int done = 0;
+		int errors=0;
+		while(done==0){
+			errors=0;
+		try {
+			 dblInput= scan.nextDouble() ;
+			 //System.out.println("second time");
+			 
+			 
+			 
+		}
+		catch (InputMismatchException imex) {
+			//System.out.println("ERROR: Input must be a real number in [0.00, infinity]! \n");
+			errors=1;
+			scan.nextLine();
+			
+		}
+		
+		//while(intInput>=UB&&intInput<=LB){
+			//System.out.print(prompt);
+			
+		//}
+		finally {
+					if(dblInput>=LB&&dblInput<=UB&&errors==0){
+						//System.out.println("value of shit is"+dblInput);
+						done=1; 
+					}
+					else if(done==0){
+						//System.out.println("ERROR: Input must be a real number in [0.00, infinity]!\n");
+						if(UB==666)
+							System.out.printf("ERROR: Input must be a real number in [%.2f, infinity]!\n",LB);
+						else System.out.printf("ERROR: Input must be a real number in [%.2f, %.2f]!\n",LB,UB);
+						System.out.print(prompt);
+					} 
+					
+		}
+		
+		
+		}
+		
+		
+	
+		
+	return dblInput;
+	}
+	
+	public static char getCharacter(){
+		String c ;
+		//do{
+		c= scan.nextLine();
+		
+		
+		if(c.length()>1){
+			//System.out.println();
+			//System.out.println("ERROR: Invalid menu choice!");
+			return 'z';
+		}
+		//}while(c.length()!=1);
+		char ch=c.charAt(0);
+		return ch;
+		
+	}
+	
+	
+	// create independent copy of School ArrayList
+	 public static ArrayList < School > copySchools ( ArrayList < School > P, int size) {
+	 ArrayList <School > newList = new ArrayList < School >();
+	 for (int i = 0; i < P. size (); i++) {
+	 String name = P. get(i). getName ();
+	 double alpha = P. get(i). getAlpha ();
+	 int maxMatches = P.get (i). getMaxMatches ();
+	 
+	 School temp = new School (name ,alpha , maxMatches );
+	 for (int j = 0; j < size ; j++) {
+	 temp . setRanking (j, P. get(i). getRanking (j));
+	 }
+	 newList .add ( temp );
+	 }
+	 return newList ;
+	 }
+	 
+	 public static ArrayList <Student > copyStudents ( ArrayList<Student> S, int size){
+		 ArrayList <Student> newList = new ArrayList <Student>();
+		 for(int i=0; i<S.size();i++){
+			 String name = S.get(i).getName();
+			 Double GPA= S.get(i).getGPA();
+			 int EXscore = S.get(i).getES();
+			 Student std = new Student(name,GPA,EXscore,0);
+			 for (int j = 0; j < size ; j++) {
+				 std . setRanking (j, S. get(i). getRanking (j));
+				 }
+			 newList.add(std);
+			 
+		 }
+		 return newList;
+	 }
+	 
+	 public static void removeassigned (ArrayList <Student>S, ArrayList <School> H ){
+		 
+		 for(int i=0;i<S.size();i++){
+			 S.get(i).clearMatches();
+		 }
+		 for(int i=0;i<H.size();i++){
+			 H.get(i).clearMatches();
+		 }
+		 
+	 }
+	 
+	 public static boolean checkmate (ArrayList <Student>S, ArrayList <School> H ){
+		 int tot=0;
+		 
+		 for(int i=0;i<H.size();i++){
+			 tot+=H.get(i).getMaxMatches();
+			 
+		 }
+		 //System.out.println("size of tot is "+tot+"other is "+S.size());
+		 //if(tot!=S.size())return true;
+		 
+		 int tot2=0;
+		 for(int i=0;i<S.size();i++){
+			 tot2+=S.get(i).getMaxMatches();
+			 
+		 }
+		 //System.out.println("size of tot is "+tot2+"other is "+H.size());
+		 if(tot!=tot2)return true;
+		 
+		 return false;
+	 }
+	 
+	 
+	
+	public static void main(String[] args)throws IOException {
+		
+		//System.out.println("hello");
+		
+		//String pussy = scan.nextLine();
+		
+		//int niga = scan.nextInt();
+		//scan.nextLine();
+		
+		//System.out.println(niga+" "+pussy);
+		/* //School sch = new School("Limon",1,1);
+		 ArrayList<School> scho = new ArrayList<School>();
+		 ArrayList<School> scho1 = new ArrayList<School>();
+         //if(dubl>=0&&dubl<=1)
+        
+         //sch.setName("baba");
+         scho.add(sch);
+         String name=scho.get(0).getName();
+         double d = scho.get(0).getAlpha();
+         int i = scho.get(0).getMaxMatches();
+         School sch1 = new School("Limon",1,1);
+         scho1.add(sch1);
+         
+         scho1.get(0).setName("Nithi");
+         name="kookoo";
+         System.out.println(scho.get(0).getName());*/
+		  
+		displayMenu();
+	}
+}
